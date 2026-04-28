@@ -471,11 +471,11 @@
         <div class="card-label">Work · Core question</div>
         <div class="card-question">How valued and good do you feel about your work today?</div>
         <div class="scale">
-          <button class="scale-btn" data-q="work" data-v="1" onclick="select(this)">1</button>
-          <button class="scale-btn" data-q="work" data-v="2" onclick="select(this)">2</button>
-          <button class="scale-btn" data-q="work" data-v="3" onclick="select(this)">3</button>
-          <button class="scale-btn" data-q="work" data-v="4" onclick="select(this)">4</button>
-          <button class="scale-btn" data-q="work" data-v="5" onclick="select(this)">5</button>
+          <button class="scale-btn" data-q="work" data-v="1" onclick="selectScale(this)">1</button>
+          <button class="scale-btn" data-q="work" data-v="2" onclick="selectScale(this)">2</button>
+          <button class="scale-btn" data-q="work" data-v="3" onclick="selectScale(this)">3</button>
+          <button class="scale-btn" data-q="work" data-v="4" onclick="selectScale(this)">4</button>
+          <button class="scale-btn" data-q="work" data-v="5" onclick="selectScale(this)">5</button>
         </div>
         <div class="scale-labels">
           <span>Invisible / flat</span>
@@ -488,11 +488,11 @@
         <div class="card-label">People · Colleagues</div>
         <div class="card-question">How supported do you feel by your team today?</div>
         <div class="scale">
-          <button class="scale-btn" data-q="support" data-v="1" onclick="select(this)">1</button>
-          <button class="scale-btn" data-q="support" data-v="2" onclick="select(this)">2</button>
-          <button class="scale-btn" data-q="support" data-v="3" onclick="select(this)">3</button>
-          <button class="scale-btn" data-q="support" data-v="4" onclick="select(this)">4</button>
-          <button class="scale-btn" data-q="support" data-v="5" onclick="select(this)">5</button>
+          <button class="scale-btn" data-q="support" data-v="1" onclick="selectScale(this)">1</button>
+          <button class="scale-btn" data-q="support" data-v="2" onclick="selectScale(this)">2</button>
+          <button class="scale-btn" data-q="support" data-v="3" onclick="selectScale(this)">3</button>
+          <button class="scale-btn" data-q="support" data-v="4" onclick="selectScale(this)">4</button>
+          <button class="scale-btn" data-q="support" data-v="5" onclick="selectScale(this)">5</button>
         </div>
         <div class="scale-labels">
           <span>Alone in it</span>
@@ -505,11 +505,11 @@
         <div class="card-label">People · Belonging</div>
         <div class="card-question">How included and seen do you feel at work today?</div>
         <div class="scale">
-          <button class="scale-btn" data-q="inclusion" data-v="1" onclick="select(this)">1</button>
-          <button class="scale-btn" data-q="inclusion" data-v="2" onclick="select(this)">2</button>
-          <button class="scale-btn" data-q="inclusion" data-v="3" onclick="select(this)">3</button>
-          <button class="scale-btn" data-q="inclusion" data-v="4" onclick="select(this)">4</button>
-          <button class="scale-btn" data-q="inclusion" data-v="5" onclick="select(this)">5</button>
+          <button class="scale-btn" data-q="inclusion" data-v="1" onclick="selectScale(this)">1</button>
+          <button class="scale-btn" data-q="inclusion" data-v="2" onclick="selectScale(this)">2</button>
+          <button class="scale-btn" data-q="inclusion" data-v="3" onclick="selectScale(this)">3</button>
+          <button class="scale-btn" data-q="inclusion" data-v="4" onclick="selectScale(this)">4</button>
+          <button class="scale-btn" data-q="inclusion" data-v="5" onclick="selectScale(this)">5</button>
         </div>
         <div class="scale-labels">
           <span>On the outside</span>
@@ -523,16 +523,16 @@
         <div class="card-question">Where are you in your cycle today?</div>
         <div class="cycle-options">
           <button class="cycle-btn" data-q="cycle" data-v="menstrual" onclick="selectCycle(this)">
-            <span class="cycle-icon">🌑</span>Menstrual<br><small style="opacity:0.6">Days ~1–5</small>
+            <span class="cycle-icon">🌑</span>Menstrual<br><small style="opacity:0.6">Days ~1–6</small>
           </button>
           <button class="cycle-btn" data-q="cycle" data-v="follicular" onclick="selectCycle(this)">
-            <span class="cycle-icon">🌒</span>Follicular<br><small style="opacity:0.6">Days ~6–13</small>
+            <span class="cycle-icon">🌒</span>Follicular<br><small style="opacity:0.6">Days ~7–12</small>
           </button>
           <button class="cycle-btn" data-q="cycle" data-v="ovulation" onclick="selectCycle(this)">
-            <span class="cycle-icon">🌕</span>Ovulation<br><small style="opacity:0.6">Days ~14–16</small>
+            <span class="cycle-icon">🌕</span>Ovulation<br><small style="opacity:0.6">Days ~13–15</small>
           </button>
           <button class="cycle-btn" data-q="cycle" data-v="luteal" onclick="selectCycle(this)">
-            <span class="cycle-icon">🌘</span>Luteal / PMS<br><small style="opacity:0.6">Days ~17–28</small>
+            <span class="cycle-icon">🌘</span>Luteal / PMS<br><small style="opacity:0.6">Days ~16–26</small>
           </button>
           <button class="cycle-btn" data-q="cycle" data-v="unsure" onclick="selectCycle(this)" style="grid-column:span 2">
             <span class="cycle-icon">🤷‍♀️</span>Not sure / skipping
@@ -545,11 +545,11 @@
         <div class="card-label">Work · Volume</div>
         <div class="card-question">How does your workload feel today?</div>
         <div class="scale">
-          <button class="scale-btn" data-q="workload" data-v="1" onclick="select(this)">1</button>
-          <button class="scale-btn" data-q="workload" data-v="2" onclick="select(this)">2</button>
-          <button class="scale-btn" data-q="workload" data-v="3" onclick="select(this)">3</button>
-          <button class="scale-btn" data-q="workload" data-v="4" onclick="select(this)">4</button>
-          <button class="scale-btn" data-q="workload" data-v="5" onclick="select(this)">5</button>
+          <button class="scale-btn" data-q="workload" data-v="1" onclick="selectScale(this)">1</button>
+          <button class="scale-btn" data-q="workload" data-v="2" onclick="selectScale(this)">2</button>
+          <button class="scale-btn" data-q="workload" data-v="3" onclick="selectScale(this)">3</button>
+          <button class="scale-btn" data-q="workload" data-v="4" onclick="selectScale(this)">4</button>
+          <button class="scale-btn" data-q="workload" data-v="5" onclick="selectScale(this)">5</button>
         </div>
         <div class="scale-labels">
           <span>Drowning</span>
@@ -563,13 +563,13 @@
         <div class="card-label">Work · Momentum</div>
         <div class="card-question">Has any project stalled, been cut, or gone nowhere lately?</div>
         <div class="cycle-options" style="grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-          <button class="cycle-btn" data-q="project" data-v="none" onclick="selectCycle(this); answers.project=this.dataset.v; checkSubmit()">
+          <button class="cycle-btn" data-q="project" data-v="none" onclick="selectCycle(this)">
             <span class="cycle-icon">✅</span>No, things are moving
           </button>
-          <button class="cycle-btn" data-q="project" data-v="stalled" onclick="selectCycle(this); answers.project=this.dataset.v; checkSubmit()">
+          <button class="cycle-btn" data-q="project" data-v="stalled" onclick="selectCycle(this)">
             <span class="cycle-icon">⏸️</span>Something's stalled
           </button>
-          <button class="cycle-btn" data-q="project" data-v="killed" onclick="selectCycle(this); answers.project=this.dataset.v; checkSubmit()">
+          <button class="cycle-btn" data-q="project" data-v="killed" onclick="selectCycle(this)">
             <span class="cycle-icon">🚫</span>Something got cut
           </button>
         </div>
@@ -656,7 +656,7 @@
     checkSubmit();
   }
 
-  function select(btn) {
+  function selectScale(btn) {
     const q = btn.dataset.q;
     const v = parseInt(btn.dataset.v);
     document.querySelectorAll(`.scale-btn[data-q="${q}"]`).forEach(b => {
