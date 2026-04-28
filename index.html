@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Check-in</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf7f4;
+    --paper: #ffffff;
+    --ink: #2c2420;
+    --muted: #9c8e87;
+    --accent: #c87941;
+    --accent-soft: #f0e0ce;
+    --good: #5a8a6a;
+    --good-soft: #ddeee3;
+    --warn: #b85c38;
+    --warn-soft: #fde8df;
+    --mid: #8a7a6a;
+    --border: #e8e0d8;
+    --shadow: rgba(44, 36, 32, 0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+  }
+
+  /* Background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 560px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 36px;
+    padding-top: 12px;
+  }
+
+  .header .date-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: 36px;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+
+  .header h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  /* Tab nav */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 28px;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 9px 12px;
+    border: none;
+    background: transparent;
+    border-radius: 9px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .tab-btn.active {
+    background: white;
+    color: var(--ink);
+    font-weight: 500;
+    box-shadow: 0 1px 4px var(--shadow);
+  }
+
+  /* Cards */
+  .card {
+    background: var(--paper);
+    border-radius: 18px;
+    padding: 28px 26px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 12px var(--shadow);
+    border: 1px solid var(--border);
+  }
+
+  .card-label {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .card-question {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1.35;
+    color: var(--ink);
+    margin-bottom: 20px;
+  }
+
+  /* Scale buttons */
+  .scale {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .scale-btn {
+    flex: 1;
+    height: 44px;
+    border: 2px solid var(--border);
+    background: transparent;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    position: relative;
+  }
+
+  .scale-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  .scale-btn.selected-1 { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+  .scale-btn.selected-2 { background: #fef3ea; border-color: #d4843a; color: #d4843a; }
+  .scale-btn.selected-3 { background: #faf7f0; border-color: var(--mid); color: var(--mid); }
+  .scale-btn.selected-4 { background: #eef6f0; border-color: #6aaa7a; color: #6aaa7a; }
+  .scale-btn.selected-5 { background: var(--good-soft); border-color: var(--good); color: var(--good); }
+
+  .scale-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding: 0 2px;
+  }
+
+  .scale-labels span {
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  /* Cycle selector */
+  .cycle-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .cycle-btn {
+    padding: 12px 10px;
+    border: 2px solid var(--border);
+    background: transparent;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  .cycle-btn .cycle-icon { font-size: 18px; display: block; margin-bottom: 4px; }
+  .cycle-btn:hover { border-color: var(--accent); color: var(--ink); }
+  .cycle-btn.selected { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); font-weight: 500; }
+
+  /* Notes */
+  .notes-area {
+    width: 100%;
+    min-height: 90px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    background: transparent;
+    resize: vertical;
+    transition: border-color 0.18s ease;
+    outline: none;
+  }
+
+  .notes-area:focus { border-color: var(--accent); }
+  .notes-area::placeholder { color: var(--muted); }
+
+  /* Submit */
+  .submit-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    border: none;
+    border-radius: 14px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-style: italic;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 16px rgba(200, 121, 65, 0.3);
+    margin-top: 8px;
+  }
+
+  .submit-btn:hover {
+    background: #b56a33;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(200, 121, 65, 0.4);
+  }
+
+  .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* Success */
+  .success-msg {
+    text-align: center;
+    padding: 40px 20px;
+    display: none;
+  }
+
+  .success-msg .check { font-size: 48px; margin-bottom: 12px; }
+  .success-msg h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 300;
+    color: var(--good);
+    margin-bottom: 8px;
+  }
+  .success-msg p { color: var(--muted); font-size: 14px; }
+
+  /* Already logged today */
+  .already-logged {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--ink);
+    display: none;
+  }
+
+  /* Patterns view */
+  #patterns-view { display: none; }
+
+  .no-data {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-style: italic;
+  }
+
+  /* Log entries */
+  .entries-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .entry-card {
+    background: var(--paper);
+    border-radius: 14px;
+    padding: 18px 20px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 6px var(--shadow);
+  }
+
+  .entry-date {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .entry-scores {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .score-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--ink);
+  }
+
+  .score-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .dot-1 { background: var(--warn-soft); color: var(--warn); }
+  .dot-2 { background: #fef3ea; color: #d4843a; }
+  .dot-3 { background: #faf7f0; color: var(--mid); }
+  .dot-4 { background: #eef6f0; color: #6aaa7a; }
+  .dot-5 { background: var(--good-soft); color: var(--good); }
+
+  .entry-cycle {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+
+  .entry-note {
+    font-size: 13px;
+    color: var(--muted);
+    font-style: italic;
+    margin-top: 6px;
+  }
+
+  /* Insights */
+  .insight-card {
+    background: var(--accent-soft);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 14px;
+    border: 1px solid #e8c8a8;
+  }
+
+  .insight-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 400;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+
+  .insight-body {
+    font-size: 13px;
+    color: var(--mid);
+    line-height: 1.6;
+  }
+
+  .insight-body strong { color: var(--ink); }
+
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 300;
+    color: var(--ink);
+    margin: 24px 0 12px;
+  }
+
+  /* Sparkline */
+  .sparkline-wrap {
+    background: var(--paper);
+    border-radius: 14px;
+    padding: 18px 20px;
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+    box-shadow: 0 1px 6px var(--shadow);
+  }
+
+  .sparkline-label { font-size: 12px; color: var(--muted); margin-bottom: 10px; letter-spacing: 0.06em; }
+
+  .sparkline-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 48px;
+  }
+
+  .spark-bar {
+    flex: 1;
+    border-radius: 4px 4px 0 0;
+    min-height: 4px;
+    transition: height 0.3s ease;
+    position: relative;
+  }
+
+  .spark-bar[data-val="1"] { background: var(--warn); height: 20%; }
+  .spark-bar[data-val="2"] { background: #d4843a; height: 40%; }
+  .spark-bar[data-val="3"] { background: var(--mid); height: 60%; }
+  .spark-bar[data-val="4"] { background: #6aaa7a; height: 80%; }
+  .spark-bar[data-val="5"] { background: var(--good); height: 100%; }
+
+  .clear-btn {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.18s;
+  }
+
+  .clear-btn:hover { border-color: var(--warn); color: var(--warn); }
+
+  @media (max-width: 400px) {
+    .card-question { font-size: 19px; }
+    .scale-btn { height: 40px; font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="date-label" id="date-display"></div>
+    <h1>How are you <em>really</em> doing?</h1>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('checkin')">Today's check-in</button>
+    <button class="tab-btn" onclick="showTab('patterns')">Patterns</button>
+  </div>
+
+  <!-- CHECK-IN VIEW -->
+  <div id="checkin-view">
+    <div class="already-logged" id="already-logged-msg">
+      ✓ You've already checked in today. Come back tomorrow, or <a href="#" onclick="allowRecheck(); return false;" style="color: var(--accent);">update today's entry.</a>
+    </div>
+
+    <div id="form-content">
+      <!-- Q1: Work feeling -->
+      <div class="card">
+        <div class="card-label">Work · Core question</div>
+        <div class="card-question">How valued and good do you feel about your work today?</div>
+        <div class="scale">
+          <button class="scale-btn" data-q="work" data-v="1" onclick="select(this)">1</button>
+          <button class="scale-btn" data-q="work" data-v="2" onclick="select(this)">2</button>
+          <button class="scale-btn" data-q="work" data-v="3" onclick="select(this)">3</button>
+          <button class="scale-btn" data-q="work" data-v="4" onclick="select(this)">4</button>
+          <button class="scale-btn" data-q="work" data-v="5" onclick="select(this)">5</button>
+        </div>
+        <div class="scale-labels">
+          <span>Invisible / flat</span>
+          <span>Really good</span>
+        </div>
+      </div>
+
+      <!-- Q2: Colleagues -->
+      <div class="card">
+        <div class="card-label">People · Colleagues</div>
+        <div class="card-question">How supported do you feel by your team today?</div>
+        <div class="scale">
+          <button class="scale-btn" data-q="support" data-v="1" onclick="select(this)">1</button>
+          <button class="scale-btn" data-q="support" data-v="2" onclick="select(this)">2</button>
+          <button class="scale-btn" data-q="support" data-v="3" onclick="select(this)">3</button>
+          <button class="scale-btn" data-q="support" data-v="4" onclick="select(this)">4</button>
+          <button class="scale-btn" data-q="support" data-v="5" onclick="select(this)">5</button>
+        </div>
+        <div class="scale-labels">
+          <span>Alone in it</span>
+          <span>Truly held</span>
+        </div>
+      </div>
+
+      <!-- Q3: Inclusion -->
+      <div class="card">
+        <div class="card-label">People · Belonging</div>
+        <div class="card-question">How included and seen do you feel at work today?</div>
+        <div class="scale">
+          <button class="scale-btn" data-q="inclusion" data-v="1" onclick="select(this)">1</button>
+          <button class="scale-btn" data-q="inclusion" data-v="2" onclick="select(this)">2</button>
+          <button class="scale-btn" data-q="inclusion" data-v="3" onclick="select(this)">3</button>
+          <button class="scale-btn" data-q="inclusion" data-v="4" onclick="select(this)">4</button>
+          <button class="scale-btn" data-q="inclusion" data-v="5" onclick="select(this)">5</button>
+        </div>
+        <div class="scale-labels">
+          <span>On the outside</span>
+          <span>Fully part of it</span>
+        </div>
+      </div>
+
+      <!-- Q4: Cycle -->
+      <div class="card">
+        <div class="card-label">Body · Cycle phase</div>
+        <div class="card-question">Where are you in your cycle today?</div>
+        <div class="cycle-options">
+          <button class="cycle-btn" data-q="cycle" data-v="menstrual" onclick="selectCycle(this)">
+            <span class="cycle-icon">🌑</span>Menstrual<br><small style="opacity:0.6">Days ~1–5</small>
+          </button>
+          <button class="cycle-btn" data-q="cycle" data-v="follicular" onclick="selectCycle(this)">
+            <span class="cycle-icon">🌒</span>Follicular<br><small style="opacity:0.6">Days ~6–13</small>
+          </button>
+          <button class="cycle-btn" data-q="cycle" data-v="ovulation" onclick="selectCycle(this)">
+            <span class="cycle-icon">🌕</span>Ovulation<br><small style="opacity:0.6">Days ~14–16</small>
+          </button>
+          <button class="cycle-btn" data-q="cycle" data-v="luteal" onclick="selectCycle(this)">
+            <span class="cycle-icon">🌘</span>Luteal / PMS<br><small style="opacity:0.6">Days ~17–28</small>
+          </button>
+          <button class="cycle-btn" data-q="cycle" data-v="unsure" onclick="selectCycle(this)" style="grid-column:span 2">
+            <span class="cycle-icon">🤷‍♀️</span>Not sure / skipping
+          </button>
+        </div>
+      </div>
+
+      <!-- Q5: Workload -->
+      <div class="card">
+        <div class="card-label">Work · Volume</div>
+        <div class="card-question">How does your workload feel today?</div>
+        <div class="scale">
+          <button class="scale-btn" data-q="workload" data-v="1" onclick="select(this)">1</button>
+          <button class="scale-btn" data-q="workload" data-v="2" onclick="select(this)">2</button>
+          <button class="scale-btn" data-q="workload" data-v="3" onclick="select(this)">3</button>
+          <button class="scale-btn" data-q="workload" data-v="4" onclick="select(this)">4</button>
+          <button class="scale-btn" data-q="workload" data-v="5" onclick="select(this)">5</button>
+        </div>
+        <div class="scale-labels">
+          <span>Drowning</span>
+          <span>Too empty</span>
+        </div>
+        <div style="text-align:center;margin-top:6px;font-size:11px;color:var(--muted)">3 = just right</div>
+      </div>
+
+      <!-- Q6: Projects stalled -->
+      <div class="card">
+        <div class="card-label">Work · Momentum</div>
+        <div class="card-question">Has any project stalled, been cut, or gone nowhere lately?</div>
+        <div class="cycle-options" style="grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+          <button class="cycle-btn" data-q="project" data-v="none" onclick="selectCycle(this); answers.project=this.dataset.v; checkSubmit()">
+            <span class="cycle-icon">✅</span>No, things are moving
+          </button>
+          <button class="cycle-btn" data-q="project" data-v="stalled" onclick="selectCycle(this); answers.project=this.dataset.v; checkSubmit()">
+            <span class="cycle-icon">⏸️</span>Something's stalled
+          </button>
+          <button class="cycle-btn" data-q="project" data-v="killed" onclick="selectCycle(this); answers.project=this.dataset.v; checkSubmit()">
+            <span class="cycle-icon">🚫</span>Something got cut
+          </button>
+        </div>
+      </div>
+
+      <!-- Q6: Note -->
+      <div class="card">
+        <div class="card-label">Optional · Note to self</div>
+        <div class="card-question">Anything you want to remember about today?</div>
+        <textarea class="notes-area" id="notes-input" placeholder="A meeting that stung, a win, a feeling you can't name yet…"></textarea>
+      </div>
+
+      <button class="submit-btn" id="submit-btn" onclick="submitEntry()" disabled>Save today's check-in</button>
+
+      <div class="success-msg" id="success-msg">
+        <div class="check">🌿</div>
+        <h2>Saved.</h2>
+        <p>Small data, big understanding. See you tomorrow.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PATTERNS VIEW -->
+  <div id="patterns-view">
+    <div class="no-data" id="no-data-msg" style="display:none">
+      <p>No entries yet.<br>Start checking in to find your patterns.</p>
+    </div>
+    <div id="patterns-content"></div>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'daily_checkin_log';
+  let answers = { work: null, support: null, inclusion: null, cycle: null, workload: null, project: null };
+  let recheckAllowed = false;
+
+  // Date
+  const today = new Date();
+  const todayKey = today.toISOString().slice(0, 10);
+  document.getElementById('date-display').textContent = today.toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric'
+  });
+
+  function getLog() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+  }
+
+  function saveLog(log) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(log));
+  }
+
+  function checkAlreadyLogged() {
+    const log = getLog();
+    const existing = log.find(e => e.date === todayKey);
+    if (existing && !recheckAllowed) {
+      document.getElementById('already-logged-msg').style.display = 'block';
+      document.getElementById('submit-btn').style.display = 'none';
+      // pre-fill
+      if (existing.work) clickBtn('work', existing.work);
+      if (existing.support) clickBtn('support', existing.support);
+      if (existing.inclusion) clickBtn('inclusion', existing.inclusion);
+      if (existing.workload) clickBtn('workload', existing.workload);
+      if (existing.cycle) {
+        const cb = document.querySelector(`.cycle-btn[data-q="cycle"][data-v="${existing.cycle}"]`);
+        if (cb) { cb.classList.add('selected'); answers.cycle = existing.cycle; }
+      }
+      if (existing.project) {
+        const pb = document.querySelector(`.cycle-btn[data-q="project"][data-v="${existing.project}"]`);
+        if (pb) { pb.classList.add('selected'); answers.project = existing.project; }
+      }
+      if (existing.note) document.getElementById('notes-input').value = existing.note;
+    }
+  }
+
+  function clickBtn(q, v) {
+    const btn = document.querySelector(`.scale-btn[data-q="${q}"][data-v="${v}"]`);
+    if (btn) { answers[q] = parseInt(v); btn.classList.add(`selected-${v}`); }
+  }
+
+  function allowRecheck() {
+    recheckAllowed = true;
+    document.getElementById('already-logged-msg').style.display = 'none';
+    document.getElementById('submit-btn').style.display = 'block';
+    checkSubmit();
+  }
+
+  function select(btn) {
+    const q = btn.dataset.q;
+    const v = parseInt(btn.dataset.v);
+    document.querySelectorAll(`.scale-btn[data-q="${q}"]`).forEach(b => {
+      b.className = 'scale-btn';
+    });
+    btn.classList.add(`selected-${v}`);
+    answers[q] = v;
+    checkSubmit();
+  }
+
+  function selectCycle(btn) {
+    const group = btn.dataset.q === 'project' ? '[data-q="project"]' : '[data-q="cycle"]';
+    document.querySelectorAll(`.cycle-btn${group}`).forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    if (btn.dataset.q === 'project') {
+      answers.project = btn.dataset.v;
+    } else {
+      answers.cycle = btn.dataset.v;
+    }
+    checkSubmit();
+  }
+
+  function checkSubmit() {
+    const ready = answers.work && answers.support && answers.inclusion && answers.cycle && answers.workload && answers.project;
+    document.getElementById('submit-btn').disabled = !ready;
+  }
+
+  function submitEntry() {
+    const log = getLog();
+    const note = document.getElementById('notes-input').value.trim();
+    const entry = {
+      date: todayKey,
+      work: answers.work,
+      support: answers.support,
+      inclusion: answers.inclusion,
+      cycle: answers.cycle,
+      workload: answers.workload,
+      project: answers.project,
+      note: note,
+      ts: Date.now()
+    };
+    const idx = log.findIndex(e => e.date === todayKey);
+    if (idx >= 0) log[idx] = entry; else log.push(entry);
+    saveLog(log);
+
+    document.getElementById('form-content').style.display = 'none';
+    document.getElementById('success-msg').style.display = 'block';
+    document.getElementById('already-logged-msg').style.display = 'none';
+  }
+
+  // ---- PATTERNS ----
+  function showTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach((b, i) => {
+      b.classList.toggle('active', (i === 0 && tab === 'checkin') || (i === 1 && tab === 'patterns'));
+    });
+    document.getElementById('checkin-view').style.display = tab === 'checkin' ? 'block' : 'none';
+    document.getElementById('patterns-view').style.display = tab === 'patterns' ? 'block' : 'none';
+    if (tab === 'patterns') renderPatterns();
+  }
+
+  function renderPatterns() {
+    const log = getLog().sort((a, b) => a.date.localeCompare(b.date));
+    const container = document.getElementById('patterns-content');
+    const noData = document.getElementById('no-data-msg');
+
+    if (log.length === 0) { noData.style.display = 'block'; container.innerHTML = ''; return; }
+    noData.style.display = 'none';
+
+    let html = '';
+
+    // Insights
+    if (log.length >= 3) {
+      html += generateInsights(log);
+    }
+
+    // Sparklines
+    html += `<div class="section-title">Your trends</div>`;
+    html += renderSparkline('Work feeling', log.map(e => e.work), log.map(e => e.date));
+    html += renderSparkline('Workload (3=ideal)', log.map(e => e.workload), log.map(e => e.date));
+    html += renderSparkline('Team support', log.map(e => e.support), log.map(e => e.date));
+    html += renderSparkline('Inclusion', log.map(e => e.inclusion), log.map(e => e.date));
+
+    // Cycle breakdown
+    if (log.length >= 3) {
+      html += renderCycleBreakdown(log);
+    }
+
+    // Entry log
+    html += `<div class="section-title">All entries</div><div class="entries-list">`;
+    [...log].reverse().forEach(e => {
+      const d = new Date(e.date + 'T12:00:00');
+      const label = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      const cycleLabels = { menstrual: '🌑 Menstrual', follicular: '🌒 Follicular', ovulation: '🌕 Ovulation', luteal: '🌘 Luteal/PMS', unsure: '🤷‍♀️ Unsure' };
+      const projectLabels = { none: '✅ Moving', stalled: '⏸️ Stalled', killed: '🚫 Cut' };
+      html += `<div class="entry-card">
+        <div class="entry-date">${label}</div>
+        <div class="entry-scores">
+          <div class="score-pill"><div class="score-dot dot-${e.work}">${e.work}</div> Work feeling</div>
+          <div class="score-pill"><div class="score-dot dot-${e.support}">${e.support}</div> Team support</div>
+          <div class="score-pill"><div class="score-dot dot-${e.inclusion}">${e.inclusion}</div> Inclusion</div>
+          <div class="score-pill"><div class="score-dot dot-${e.workload}">${e.workload}</div> Workload</div>
+          <div class="score-pill"><span style="font-size:18px;margin-right:6px">${cycleLabels[e.cycle]?.split(' ')[0]}</span> ${cycleLabels[e.cycle]?.split(' ').slice(1).join(' ')}</div>
+          <div class="score-pill"><span style="font-size:16px;margin-right:6px">${projectLabels[e.project]?.split(' ')[0] || '—'}</span> ${projectLabels[e.project]?.split(' ').slice(1).join(' ') || 'No data'}</div>
+        </div>
+        ${e.note ? `<div class="entry-note">"${e.note}"</div>` : ''}
+      </div>`;
+    });
+    html += `</div>`;
+    html += `<button class="clear-btn" onclick="clearAll()">Clear all data</button>`;
+
+    container.innerHTML = html;
+  }
+
+  function renderSparkline(label, vals, dates) {
+    const bars = vals.map((v, i) => {
+      const d = new Date(dates[i] + 'T12:00:00');
+      const dl = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return `<div class="spark-bar" data-val="${v}" title="${dl}: ${v}/5"></div>`;
+    }).join('');
+    const avg = (vals.reduce((s, v) => s + v, 0) / vals.length).toFixed(1);
+    return `<div class="sparkline-wrap">
+      <div class="sparkline-label">${label} · avg ${avg}/5</div>
+      <div class="sparkline-bars">${bars}</div>
+    </div>`;
+  }
+
+  function generateInsights(log) {
+    let html = `<div class="section-title">Insights</div>`;
+    const insights = [];
+
+    // Luteal pattern
+    const luteal = log.filter(e => e.cycle === 'luteal');
+    const other = log.filter(e => e.cycle !== 'luteal' && e.cycle !== 'unsure');
+    if (luteal.length >= 2 && other.length >= 2) {
+      const lutealWork = avg(luteal.map(e => e.work));
+      const otherWork = avg(other.map(e => e.work));
+      if (lutealWork < otherWork - 0.5) {
+        insights.push({
+          title: 'Luteal phase & work feelings',
+          body: `Your work satisfaction scores average <strong>${lutealWork.toFixed(1)}</strong> during the luteal/PMS phase vs <strong>${otherWork.toFixed(1)}</strong> at other times. The drop is real — your biology is a factor, not a flaw.`
+        });
+      }
+    }
+
+    // Support → work correlation
+    const sorted = [...log].sort((a, b) => a.support - b.support);
+    const low = sorted.slice(0, Math.ceil(sorted.length / 2));
+    const high = sorted.slice(Math.floor(sorted.length / 2));
+    const lowWork = avg(low.map(e => e.work));
+    const highWork = avg(high.map(e => e.work));
+    if (highWork - lowWork > 0.7) {
+      insights.push({
+        title: 'Team support lifts your work feeling',
+        body: `On days you feel supported (top half of support scores), your work satisfaction averages <strong>${highWork.toFixed(1)}/5</strong>. On lower-support days: <strong>${lowWork.toFixed(1)}/5</strong>. Colleague energy moves the needle for you.`
+      });
+    }
+
+    // Inclusion → work
+    const sortedInc = [...log].sort((a, b) => a.inclusion - b.inclusion);
+    const lowInc = sortedInc.slice(0, Math.ceil(sortedInc.length / 2));
+    const highInc = sortedInc.slice(Math.floor(sortedInc.length / 2));
+    const lowIncWork = avg(lowInc.map(e => e.work));
+    const highIncWork = avg(highInc.map(e => e.work));
+    if (highIncWork - lowIncWork > 0.7) {
+      insights.push({
+        title: 'Inclusion shapes how valued you feel',
+        body: `When inclusion is high, your work satisfaction averages <strong>${highIncWork.toFixed(1)}/5</strong>. When it's low: <strong>${lowIncWork.toFixed(1)}/5</strong>. Feeling seen at work matters deeply to you.`
+      });
+    }
+
+    // Workload extremes → work feeling
+    const overwhelmed = log.filter(e => e.workload <= 2);
+    const understretched = log.filter(e => e.workload >= 4);
+    const balanced = log.filter(e => e.workload === 3);
+    if (overwhelmed.length >= 2 && balanced.length >= 1) {
+      const oWork = avg(overwhelmed.map(e => e.work));
+      const bWork = avg(balanced.map(e => e.work));
+      if (bWork - oWork > 0.5) {
+        insights.push({
+          title: 'Too much work affects how valued you feel',
+          body: `On overwhelmed days (workload 1–2), your work satisfaction averages <strong>${oWork.toFixed(1)}/5</strong>. On balanced days: <strong>${bWork.toFixed(1)}/5</strong>. Volume isn't just tiring — it chips away at how good you feel about what you're doing.`
+        });
+      }
+    }
+    if (understretched.length >= 2 && balanced.length >= 1) {
+      const uWork = avg(understretched.map(e => e.work));
+      const bWork = avg(balanced.map(e => e.work));
+      if (bWork - uWork > 0.5) {
+        insights.push({
+          title: 'Too little work also affects your mood',
+          body: `On quieter days (workload 4–5), your work satisfaction averages <strong>${uWork.toFixed(1)}/5</strong> vs <strong>${bWork.toFixed(1)}/5</strong> on balanced days. You thrive when there's meaningful work to sink into.`
+        });
+      }
+    }
+
+
+    const stalledOrKilled = log.filter(e => e.project === 'stalled' || e.project === 'killed');
+    const movingDays = log.filter(e => e.project === 'none');
+    if (stalledOrKilled.length >= 2 && movingDays.length >= 2) {
+      const stalledWork = avg(stalledOrKilled.map(e => e.work));
+      const movingWork = avg(movingDays.map(e => e.work));
+      if (movingWork - stalledWork > 0.5) {
+        insights.push({
+          title: 'Stalled projects drag your work feeling down',
+          body: `On days when something has stalled or been cut, your work satisfaction averages <strong>${stalledWork.toFixed(1)}/5</strong>. When things are moving: <strong>${movingWork.toFixed(1)}/5</strong>. Project momentum matters to how valued you feel.`
+        });
+      }
+    }
+
+
+    if (log.length >= 6) {
+      const recent = log.slice(-5);
+      const before = log.slice(0, log.length - 5);
+      const recentWork = avg(recent.map(e => e.work));
+      const beforeWork = avg(before.map(e => e.work));
+      const delta = recentWork - beforeWork;
+      if (Math.abs(delta) > 0.4) {
+        const dir = delta > 0 ? 'up' : 'down';
+        insights.push({
+          title: `Your work feeling is trending ${dir}`,
+          body: `Your last 5 entries average <strong>${recentWork.toFixed(1)}/5</strong> for work satisfaction, compared to <strong>${beforeWork.toFixed(1)}/5</strong> before. ${delta > 0 ? 'Something's shifting in a good direction.' : 'Something's been weighing on you lately.'}`
+        });
+      }
+    }
+
+    if (insights.length === 0) {
+      insights.push({
+        title: 'Keep going',
+        body: 'With a few more entries, patterns will start to emerge. You\'re building the data you need to understand yourself better.'
+      });
+    }
+
+    insights.forEach(i => {
+      html += `<div class="insight-card"><div class="insight-title">${i.title}</div><div class="insight-body">${i.body}</div></div>`;
+    });
+
+    return html;
+  }
+
+  function renderCycleBreakdown(log) {
+    const phases = ['menstrual', 'follicular', 'ovulation', 'luteal'];
+    const labels = { menstrual: '🌑 Menstrual', follicular: '🌒 Follicular', ovulation: '🌕 Ovulation', luteal: '🌘 Luteal/PMS' };
+    let rows = '';
+    phases.forEach(phase => {
+      const entries = log.filter(e => e.cycle === phase);
+      if (entries.length === 0) return;
+      const w = avg(entries.map(e => e.work)).toFixed(1);
+      const s = avg(entries.map(e => e.support)).toFixed(1);
+      const inc = avg(entries.map(e => e.inclusion)).toFixed(1);
+      const dot = Math.round(parseFloat(w));
+      rows += `<div class="entry-card" style="margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div class="score-dot dot-${dot}" style="font-size:16px;width:32px;height:32px">${entries.length}</div>
+          <strong style="font-size:14px">${labels[phase]}</strong>
+          <span style="font-size:11px;color:var(--muted);margin-left:auto">${entries.length} ${entries.length === 1 ? 'day' : 'days'}</span>
+        </div>
+        <div class="entry-scores">
+          <div class="score-pill"><div class="score-dot dot-${Math.round(parseFloat(w))}">${w}</div> Work avg</div>
+          <div class="score-pill"><div class="score-dot dot-${Math.round(parseFloat(s))}">${s}</div> Support avg</div>
+          <div class="score-pill"><div class="score-dot dot-${Math.round(parseFloat(inc))}">${inc}</div> Inclusion avg</div>
+        </div>
+      </div>`;
+    });
+    if (!rows) return '';
+    return `<div class="section-title">By cycle phase</div>${rows}`;
+  }
+
+  function avg(arr) {
+    return arr.reduce((s, v) => s + v, 0) / arr.length;
+  }
+
+  function clearAll() {
+    if (confirm('Clear all your check-in data? This can't be undone.')) {
+      localStorage.removeItem(STORAGE_KEY);
+      renderPatterns();
+    }
+  }
+
+  // Init
+  checkAlreadyLogged();
+</script>
+</body>
+</html>
